@@ -64,8 +64,6 @@ extern "C" {
 #define bitToggle(value, bit) ((value) ^= (1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
 
-#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
-
 #ifdef __cplusplus
 }
 #endif

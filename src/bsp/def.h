@@ -46,7 +46,6 @@ extern "C" {
 #define _DEF_OUTPUT_PULLDOWN  6
 #define _DEF_INPUT_AF_PP      7
 
-
 #define USE_HAL_DRIVER
 
 #ifdef __cplusplus

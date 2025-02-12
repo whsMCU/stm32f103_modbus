@@ -23,6 +23,8 @@ extern "C" {
 enum
 {
 	LED,
+	RS_485_DE,
+	KEY
 };
 
 

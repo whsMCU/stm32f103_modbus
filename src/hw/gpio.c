@@ -23,7 +23,9 @@ typedef struct
 
 const gpio_tbl_t gpio_tbl[GPIO_MAX_CH] =
 {
-	{GPIOB, GPIO_PIN_2, _DEF_OUTPUT, GPIO_PIN_SET, GPIO_PIN_RESET, _DEF_LOW},    // 0. LED
+	{GPIOB, GPIO_PIN_2,  _DEF_OUTPUT, 		   GPIO_PIN_SET, GPIO_PIN_RESET, _DEF_LOW},    // 0. LED
+	{GPIOB, GPIO_PIN_11, _DEF_OUTPUT, 		   GPIO_PIN_SET, GPIO_PIN_RESET, _DEF_LOW},    // 1. RS-485 DE
+	{GPIOA, GPIO_PIN_0,  _DEF_INPUT_IT_RISING, GPIO_PIN_SET, GPIO_PIN_RESET, _DEF_LOW},    // 2. KEY
 };
 
 
@@ -42,13 +44,17 @@ bool gpioInit(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2|GPIO_PIN_11, GPIO_PIN_RESET);
 
   for (int i=0; i<GPIO_MAX_CH; i++)
   {
     gpioPinMode(i, gpio_tbl[i].mode);
     gpioPinWrite(i, gpio_tbl[i].init_value);
   }
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
 #ifdef _USE_HW_CLI
   cliAdd("gpio", cliGpio);

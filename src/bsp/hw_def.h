@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 #define _USE_HW_GPIO
-#define      HW_GPIO_MAX_CH         1
+#define      HW_GPIO_MAX_CH         3
 
 
 #define _USE_HW_UART
@@ -32,22 +32,39 @@ extern "C" {
 #define M_PI       3.14159265358979323846f
 #endif /* M_PI */
 
-#define D2R (3.141592653f / 180.0f)
-#define R2D (180.0f / 3.141592653f)
+#define PI 3.1415926535897932384626433832795
+#define HALF_PI 1.5707963267948966192313216916398
+#define TWO_PI 6.283185307179586476925286766559
+#define DEG_TO_RAD 0.017453292519943295769236907684886
+#define RAD_TO_DEG 57.295779513082320876798154814105
+#define EULER 2.718281828459045235360287471352
 
-#define TRUE 1
-#define FALSE 0
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+//#define abs(x) ((x)>0?(x):-(x))
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+//#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
+#define radians(deg) ((deg)*DEG_TO_RAD)
+#define degrees(rad) ((rad)*RAD_TO_DEG)
+#define sq(x) ((x)*(x))
 
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#define max(a, b) ((a) > (b) ? (a) : (b))
-//#define abs(x) ((x) > 0 ? (x) : -(x))
-#define zofs(x, y, z) ((x) > (y+z) ? (x) : ((x) < (y-z) ? (x) : (y)))
-#define map(x, in_min, in_max, out_min, out_max) ((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+#define interrupts() sei()
+#define noInterrupts() cli()
 
-#define ROUND(x, dig)  ( floor((x) * pow((float)(10), dig) + 0.5f) / pow((float)(10), dig) )
+#define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
+#define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
+#define microsecondsToClockCycles(a) ( (a) * clockCyclesPerMicrosecond() )
 
-#define CONVERT_PARAMETER_TO_FLOAT(param) (0.001f * param)
-#define CONVERT_PARAMETER_TO_PERCENT(param) (0.01f * param)
+#define lowByte(w) ((uint8_t) ((w) & 0xff))
+#define highByte(w) ((uint8_t) ((w) >> 8))
+
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitToggle(value, bit) ((value) ^= (1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
+
+#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
 
 #ifdef __cplusplus
 }

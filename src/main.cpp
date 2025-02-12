@@ -18,9 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-//#include "dma.h"
-//#include "usart.h"
-//#include "gpio.h"
+#include "ModbusRTUMaster.h"
 
 void hwInit(void);
 void SystemClock_Config(void);
@@ -59,6 +57,7 @@ void hwInit(void)
   gpioInit();
   uartInit();
   uartOpen(_DEF_UART1, 115200);
+  ModbusRTUMaster modbus(_DEF_UART1, RS_485_DE);
 }
 
 /**

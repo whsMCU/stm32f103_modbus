@@ -18,12 +18,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "ModbusMaster.h"
+#include "Modbus.h"
 
 void hwInit(void);
 void SystemClock_Config(void);
 
-ModbusMaster modbus;
+Modbus modbus;
 
 uint32_t pre_time = 0;
 
@@ -52,7 +52,6 @@ int main(void)
   }
 }
 
-bool state = true;
 
 void hwInit(void)
 {
@@ -62,17 +61,8 @@ void hwInit(void)
   uartInit();
   uartOpen(_DEF_UART1, 115200);
 
-  modbus.begin(_DEF_UART1, 1, RS_485_DE);
+  modbus.begin(_DEF_UART1, RS_485_DE);
 
-  uint8_t result;
-  uint16_t data[6];
-
-  // Toggle the coil at address 0x0002 (Manual Load Control)
-  result = modbus.writeSingleCoil(0x0002, state);
-  state = !state;
-
-  // Read 16 registers starting at 0x3100)
-  result = modbus.readInputRegisters(0x3100, 16);
 }
 
 /**

@@ -55,6 +55,7 @@ uint32_t uartPrintf_IT(uint8_t ch, char *fmt, ...);
 uint32_t uartGetBaud(uint8_t ch);
 bool uartSetBaud(uint8_t ch, uint32_t baud);
 baudRate_e lookupBaudRateIndex(uint32_t baudRate);
+uint8_t  uartFlush(uint8_t ch);
 
 #ifdef __cplusplus
 }

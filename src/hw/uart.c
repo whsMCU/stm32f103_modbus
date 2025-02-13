@@ -150,6 +150,20 @@ uint8_t uartRead(uint8_t ch)
   return ret;
 }
 
+uint8_t uartFlush(uint8_t ch)
+{
+	  uint8_t ret = 0;
+
+	  switch(ch)
+	  {
+	    case _DEF_UART1:
+	    	qbufferFlush(&ring_buffer[ch]);
+	      break;
+	  }
+
+	  return ret;
+}
+
 uint32_t uartWrite(uint8_t ch, uint8_t *p_data, uint32_t length)
 {
   uint32_t ret = 0;

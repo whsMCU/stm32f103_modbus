@@ -14,7 +14,6 @@ static bool is_open[UART_MAX_CH];
 #define MAX_SIZE 128
 
 static qbuffer_t ring_buffer[UART_MAX_CH];
-static volatile uint8_t rx_buf[UART_MAX_CH-1][MAX_SIZE];
 static volatile uint8_t rx_buf1[MAX_SIZE];
 
 static volatile uint8_t rx_data[UART_MAX_CH];
@@ -22,6 +21,8 @@ static volatile uint8_t rx_data[UART_MAX_CH];
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart1_tx;
+
+//extern Modbus modbus;
 
 
 const uint32_t baudRates[] = {0, 9600, 19200, 38400, 57600, 115200, 230400, 250000,
@@ -313,7 +314,6 @@ baudRate_e lookupBaudRateIndex(uint32_t baudRate)
 }
 
 uint8_t uart1_rx_data = 0;
-
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if(huart->Instance == USART1)

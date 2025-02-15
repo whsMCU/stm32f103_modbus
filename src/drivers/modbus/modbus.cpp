@@ -7,11 +7,13 @@
 
 #include <Modbus.h>
 
+
 Modbus::Modbus(void)
 {
   _idle = 0;
   _preTransmission = 0;
   _postTransmission = 0;
+  _availableForWrite_flag = true;
 }
 
 
@@ -38,88 +40,49 @@ void Modbus::postTransmission(void (*postTransmission)())
   _postTransmission = postTransmission;
 }
 
-/* Reads the boolean status of bits and sets the array elements
-   in the destination to TRUE or FALSE (single bits). */
-int modbus_read_bits(int addr, int nb, uint8_t *dest)
+static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 {
-    int rc;
+    uint8_t crc_hi = 0xFF; /* high CRC byte initialized */
+    uint8_t crc_lo = 0xFF; /* low CRC byte initialized */
+    unsigned int i; /* will index into CRC lookup */
 
-    if (nb > MODBUS_MAX_READ_BITS) {
-
-        return -1;
+    /* pass through message buffer */
+    while (buffer_length--) {
+        i = crc_hi ^ *buffer++; /* calculate the CRC  */
+        crc_hi = crc_lo ^ table_crc_hi[i];
+        crc_lo = table_crc_lo[i];
     }
 
-    rc = read_io_status(ctx, MODBUS_FC_READ_COILS, addr, nb, dest);
+    return (crc_hi << 8 | crc_lo);
+}
 
-    if (rc == -1)
-        return -1;
-    else
-        return nb;
+static int send_msg_pre(uint8_t *req, int req_length)
+{
+    uint16_t crc = crc16(req, req_length);
+    req[req_length++] = crc >> 8;
+    req[req_length++] = crc & 0x00FF;
+
+    return req_length;
 }
 
 
-/* Same as modbus_read_bits but reads the remote device input table */
-int modbus_read_input_bits(int addr, int nb, uint8_t *dest)
+uint8_t read_holding_registers(uint8_t id, uint8_t address, uint8_t nb, uint8_t *req)
 {
-    int rc;
+	uint8_t result = 0;
+	req[0] = id;
+	req[1] = MODBUS_FC_READ_HOLDING_REGISTERS;
+	req[2] = highByte(address);
+	req[3] = lowByte(address);
+	req[4] = highByte(nb);
+	req[5] = lowByte(nb);
+	send_msg_pre(req, 6);
 
-
-    if (nb > MODBUS_MAX_READ_BITS) {
-        return -1;
-    }
-
-    rc = read_io_status(ctx, MODBUS_FC_READ_DISCRETE_INPUTS, addr, nb, dest);
-
-    if (rc == -1)
-        return -1;
-    else
-        return nb;
+	result = 1;
+	return result;
 }
 
-/* Reads the holding registers of remote device and put the data into an
-   array */
-int modbus_read_registers(int addr, int nb, uint16_t *dest)
+uint8_t Modbus::request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8_t nb)
 {
-    int status;
-
-    if (nb > MODBUS_MAX_READ_REGISTERS) {
-        return -1;
-    }
-
-    status = read_registers(ctx, MODBUS_FC_READ_HOLDING_REGISTERS,
-                            addr, nb, dest);
-    return status;
-}
-
-/* Reads the input registers of remote device and put the data into an array */
-int modbus_read_input_registers(int addr, int nb,
-                                uint16_t *dest)
-{
-    int status;
-
-    if (nb > MODBUS_MAX_READ_REGISTERS) {
-        return -1;
-    }
-
-    status = read_registers(ctx, MODBUS_FC_READ_INPUT_REGISTERS,
-                            addr, nb, dest);
-
-    return status;
-}
-
-uint8_t Modbus::requestFrom(uint8_t slaveId, uint8_t type, uint8_t address, uint8_t nb)
-{
-
-  int valueSize = (type == COILS || type == DISCRETE_INPUTS) ? sizeof(uint8_t) : sizeof(uint16_t);
-
-  _values = realloc(_values, nb * valueSize);
-
-  if (_values == NULL) {
-    //errno = ENOMEM;
-
-    return 0;
-  }
-
   int result = -1;
 
   if (slaveId >= 0 && slaveId <= 247)
@@ -130,22 +93,18 @@ uint8_t Modbus::requestFrom(uint8_t slaveId, uint8_t type, uint8_t address, uint
   	return 0;
   }
 
+  if(_availableForWrite_flag == false)
+  {
+  	return 0;
+  }
 
-  switch (type) {
-    case COILS:
-      result = modbus_read_bits(address, nb, (uint8_t*)_values);
-      break;
-
-    case DISCRETE_INPUTS:
-      result = modbus_read_input_bits(address, nb, (uint8_t*)_values);
-      break;
-
-    case HOLDING_REGISTERS:
-      result = modbus_read_registers(address, nb, (uint16_t*)_values);
-      break;
-
-    case INPUT_REGISTERS:
-      result = modbus_read_input_registers(address, nb, (uint16_t*)_values);
+  switch (funtion) {
+    case MODBUS_FC_READ_HOLDING_REGISTERS:
+      result = read_holding_registers(_slaveId, address, nb, _TxData);
+      _length = 8;
+      _availableForWrite_flag = false;
+      gpioPinWrite(_de_pin, _DEF_HIGH);
+      uartWriteIT(_serial, _TxData, _length);
       break;
 
     default:
@@ -156,12 +115,15 @@ uint8_t Modbus::requestFrom(uint8_t slaveId, uint8_t type, uint8_t address, uint
     return 0;
   }
 
-  _transmissionBegun = false;
-  _type = type;
-  _available = nb;
-  _read = 0;
-  _availableForWrite = 0;
-  _written = 0;
-
   return nb;
+}
+
+void Modbus::sended(void)
+{
+	_availableForWrite_flag = true;
+}
+
+uint8_t Modbus::get_de_pin(void)
+{
+	return _de_pin;
 }

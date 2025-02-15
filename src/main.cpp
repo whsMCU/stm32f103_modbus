@@ -45,7 +45,8 @@ int main(void)
 	  if(micros()-pre_time >= 500000)
 	  {
 	    pre_time = micros();
-		gpioPinToggle(LED);
+	    gpioPinToggle(LED);
+	    modbus.request(1, MODBUS_FC_READ_HOLDING_REGISTERS, 4, 5);
 
 	  }
 	  cliMain();
@@ -63,6 +64,15 @@ void hwInit(void)
 
   modbus.begin(_DEF_UART1, RS_485_DE);
 
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if(huart->Instance == USART1)
+  {
+  	modbus.sended();
+    gpioPinWrite(modbus.get_de_pin(), _DEF_LOW);
+  }
 }
 
 /**

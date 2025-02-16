@@ -10,9 +10,8 @@
 
 Modbus::Modbus(void)
 {
-  _idle = 0;
-  _preTransmission = 0;
-  _postTransmission = 0;
+	_id = 1;
+	_RxSize = 0;
   _availableForWrite_flag = true;
 }
 
@@ -21,23 +20,6 @@ void Modbus::begin(uint8_t serial, uint8_t de_pin)
 {
   _serial = serial;
   _de_pin = de_pin;
-}
-
-void Modbus::idle(void (*idle)())
-{
-  _idle = idle;
-}
-
-
-void Modbus::preTransmission(void (*preTransmission)())
-{
-  _preTransmission = preTransmission;
-}
-
-
-void Modbus::postTransmission(void (*postTransmission)())
-{
-  _postTransmission = postTransmission;
 }
 
 static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
@@ -126,4 +108,33 @@ void Modbus::sended(void)
 uint8_t Modbus::get_de_pin(void)
 {
 	return _de_pin;
+}
+
+uint8_t Modbus::passer(uint8_t c)
+{
+	_RxStatus = Success;
+
+	_RxData[_RxSize++] = c;
+
+	if(_RxSize == 5)
+	{
+		if(_RxData[0] != _slaveId)
+		{
+			_RxStatus = InvalidSlaveID;
+			return 0;
+		}
+
+		if((_RxData[1] & 0x7F) != _funtion)
+		{
+			_RxStatus = InvalidFunction;
+			return 0;
+		}
+
+		if(bitRead(_RxData[1], 7))
+		{
+			_RxStatus = _RxData[2];
+			return 0;
+		}
+
+	}
 }

@@ -20,6 +20,8 @@
 #include "main.h"
 #include "Modbus.h"
 
+
+
 void hwInit(void);
 void SystemClock_Config(void);
 
@@ -63,6 +65,7 @@ void hwInit(void)
   uartOpen(_DEF_UART1, 115200);
 
   modbus.begin(_DEF_UART1, RS_485_DE);
+  passer_Callback = modbus.passer;
 
 }
 

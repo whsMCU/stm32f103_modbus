@@ -313,14 +313,15 @@ baudRate_e lookupBaudRateIndex(uint32_t baudRate)
     return BAUD_AUTO;
 }
 
-uint8_t uart1_rx_data = 0;
+uint8_t (*passer_Callback)(uint8_t c) = NULL;
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if(huart->Instance == USART1)
   {
     HAL_UART_Receive_IT(&huart1, (uint8_t *)&rx_data[_DEF_UART1], 1);
     qbufferWrite(&ring_buffer[_DEF_UART1], (uint8_t *)&rx_data[_DEF_UART1], 1);
-    uart1_rx_data = uartRead(_DEF_UART1);
+    passer_Callback(uartRead(_DEF_UART1));
   }
 }
 

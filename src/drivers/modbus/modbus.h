@@ -121,15 +121,22 @@ class Modbus
     Modbus();
 
     void begin(uint8_t serial, uint8_t de_pin);
-    void idle(void (*)());
-    void preTransmission(void (*)());
-    void postTransmission(void (*)());
+
+    //void passer(void (*)());
+
 
     uint8_t requestFrom(uint8_t id, uint8_t type, uint8_t address, uint8_t nb);
     uint8_t request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8_t value);
     void sended(void);
     uint8_t get_de_pin(void);
+    static uint8_t passer(uint8_t c);
 
+
+    static const uint8_t Success                    = 0x00;
+    static const uint8_t InvalidSlaveID             = 0xE0;
+    static const uint8_t InvalidFunction            = 0xE1;
+    static const uint8_t ResponseTimedOut           = 0xE2;
+    static const uint8_t InvalidCRC                 = 0xE3;
 
 
   private:
@@ -137,7 +144,10 @@ class Modbus
     uint8_t  _de_pin;
 
 
-   uint8_t _TxData[MODBUS_MAX_WRITE_BITS];
+   uint8_t _TxData[256];
+   uint8_t _RxData[256];
+   uint8_t _RxSize;
+   uint8_t _RxStatus;
 
     unsigned long _timeout;
     int _defaultId;
@@ -157,13 +167,8 @@ class Modbus
     // Modbus timeout [milliseconds]
     static const uint16_t ResponseTimeout          = 2000; ///< Modbus timeout [milliseconds]
 
+    //void (*_passer)();
 
-    // idle callback function; gets called during idle time between TX and RX
-    void (*_idle)();
-    // preTransmission callback function; gets called before writing a Modbus message
-    void (*_preTransmission)();
-    // postTransmission callback function; gets called after a Modbus message has been sent
-    void (*_postTransmission)();
 };
 
 #ifdef __cplusplus

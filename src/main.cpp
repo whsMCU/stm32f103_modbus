@@ -51,7 +51,7 @@ int main(void)
 	    modbus.request(1, MODBUS_FC_READ_HOLDING_REGISTERS, 4, 5);
 
 	  }
-	  cliMain();
+	  //cliMain();
 	  modbus.passer();
   }
 }
@@ -59,7 +59,7 @@ int main(void)
 
 void hwInit(void)
 {
-  cliInit();
+  //cliInit();
 
   gpioInit();
   uartInit();

@@ -88,6 +88,7 @@ static const uint8_t table_crc_lo[] = {
 #define MODBUS_FC_MASK_WRITE_REGISTER       0x16
 #define MODBUS_FC_WRITE_AND_READ_REGISTERS  0x17
 
+
 #define MODBUS_BROADCAST_ADDRESS    0
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
@@ -124,13 +125,11 @@ class Modbus
 
     //void passer(void (*)());
 
-
     uint8_t requestFrom(uint8_t id, uint8_t type, uint8_t address, uint8_t nb);
     uint8_t request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8_t value);
     void sended(void);
     uint8_t get_de_pin(void);
-    static uint8_t passer(uint8_t c);
-
+    uint8_t passer();
 
     static const uint8_t Success                    = 0x00;
     static const uint8_t InvalidSlaveID             = 0xE0;
@@ -138,16 +137,19 @@ class Modbus
     static const uint8_t ResponseTimedOut           = 0xE2;
     static const uint8_t InvalidCRC                 = 0xE3;
 
+    static const uint16_t ResponseTimeout           = 2000; ///< Modbus timeout [milliseconds]
 
   private:
     uint8_t  _serial;                                             ///< serial port num
     uint8_t  _de_pin;
 
-
    uint8_t _TxData[256];
    uint8_t _RxData[256];
    uint8_t _RxSize;
    uint8_t _RxStatus;
+   static const uint8_t MaxBufferSize                = 64;   ///< size of response/transmit buffers
+   uint16_t _u16ResponseBuffer[MaxBufferSize];
+   uint8_t _u8ResponseBufferLength;
 
     unsigned long _timeout;
     int _defaultId;
@@ -162,10 +164,6 @@ class Modbus
     int _address;
     int _nb;
     int _length;
-
-
-    // Modbus timeout [milliseconds]
-    static const uint16_t ResponseTimeout          = 2000; ///< Modbus timeout [milliseconds]
 
     //void (*_passer)();
 

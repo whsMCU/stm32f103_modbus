@@ -10,8 +10,8 @@
 
 Modbus::Modbus(void)
 {
-	_id = 1;
-	_RxSize = 0;
+  _id = 1;
+  _RxSize = 0;
   _availableForWrite_flag = true;
 }
 
@@ -37,6 +37,24 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
 
     return (crc_hi << 8 | crc_lo);
 }
+
+static uint16_t crc16_update(uint16_t crc, uint8_t a)
+{
+  int i;
+
+  crc ^= a;
+  for (i = 0; i < 8; ++i)
+  {
+    if (crc & 1)
+      crc = (crc >> 1) ^ 0xA001;
+    else
+      crc = (crc >> 1);
+  }
+
+  return crc;
+}
+
+unsigned int word(unsigned char h, unsigned char l) { return (h << 8) | l; }
 
 static int send_msg_pre(uint8_t *req, int req_length)
 {
@@ -110,31 +128,95 @@ uint8_t Modbus::get_de_pin(void)
 	return _de_pin;
 }
 
-uint8_t Modbus::passer(uint8_t c)
+uint8_t Modbus::passer()
 {
 	_RxStatus = Success;
 
-	_RxData[_RxSize++] = c;
+	uint16_t u16CRC;
+	static uint8_t RxLeft = 8;
 
-	if(_RxSize == 5)
+	if(uartAvailable(_serial))
 	{
-		if(_RxData[0] != _slaveId)
+		_RxData[_RxSize++] = uartRead(_serial);
+		RxLeft--;
+
+		if(_RxSize == 5)
 		{
-			_RxStatus = InvalidSlaveID;
-			return 0;
+			if(_RxData[0] != _slaveId)
+			{
+				_RxStatus = InvalidSlaveID;
+				_RxSize = 0;
+				RxLeft = 8;
+				return 0;
+			}
+
+			if((_RxData[1] & 0x7F) != _funtion)
+			{
+				_RxStatus = InvalidFunction;
+				_RxSize = 0;
+				RxLeft = 8;
+				return 0;
+			}
+
+			if(bitRead(_RxData[1], 7))
+			{
+				_RxStatus = _RxData[2];
+				_RxSize = 0;
+				RxLeft = 8;
+				return 0;
+			}
+
+			switch(_RxData[1])
+			{
+				case MODBUS_FC_READ_HOLDING_REGISTERS :
+				{
+					RxLeft = _RxData[1];
+					break;
+				}
+			}
+	}
+
+		if(_RxStatus && _RxSize >=5)
+		{
+			// calculate CRC
+			u16CRC = 0xFFFF;
+			for(int i = 0; i < (_RxSize - 2); i++)
+			{
+				u16CRC = crc16_update(u16CRC, _RxData[i]);
+			}
+
+			// verify CRC
+			if(!_RxStatus && (lowByte(u16CRC) != _RxData[_RxSize - 2] ||
+				highByte(u16CRC) != _RxData[_RxSize - 1]))
+			{
+				_RxStatus = InvalidCRC;
+				_RxSize = 0;
+				RxLeft = 8;
+				return 0;
+			}
 		}
 
-		if((_RxData[1] & 0x7F) != _funtion)
+		if(!_RxStatus)
 		{
-			_RxStatus = InvalidFunction;
-			return 0;
-		}
+			switch(_RxData[1])
+			{
+				case MODBUS_FC_READ_HOLDING_REGISTERS:
+				{
+	        // load bytes into word; response bytes are ordered H, L, H, L, ...
+	        for (int i = 0; i < (_RxData[2] >> 1); i++)
+	        {
+	          if (i < MaxBufferSize)
+	          {
+	            _u16ResponseBuffer[i] = word(_RxData[2 * i + 3], _RxData[2 * i + 4]);
+	          }
 
-		if(bitRead(_RxData[1], 7))
-		{
-			_RxStatus = _RxData[2];
-			return 0;
+	          _u8ResponseBufferLength = i;
+	        }
+	        break;
+				}
+			}
 		}
 
 	}
+	return _RxStatus;
 }

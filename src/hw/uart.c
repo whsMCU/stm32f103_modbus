@@ -16,7 +16,7 @@ static bool is_open[UART_MAX_CH];
 static qbuffer_t ring_buffer[UART_MAX_CH];
 static volatile uint8_t rx_buf1[MAX_SIZE];
 
-static volatile uint8_t rx_data[UART_MAX_CH];
+volatile uint8_t rx_data[UART_MAX_CH];
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
@@ -301,6 +301,20 @@ bool uartSetBaud(uint8_t ch, uint32_t baud)
 	return ret;
 }
 
+bool bufferWrite(uint8_t ch, uint8_t *p_data, uint32_t length)
+{
+	return qbufferWrite(&ring_buffer[ch], p_data, length);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if(huart->Instance == USART1)
+  {
+    HAL_UART_Receive_IT(&huart1, (uint8_t *)&rx_data[_DEF_UART1], 1);
+    bufferWrite(_DEF_UART1, (uint8_t *)&rx_data[_DEF_UART1], 1);
+  }
+}
+
 baudRate_e lookupBaudRateIndex(uint32_t baudRate)
 {
     uint8_t index;
@@ -311,18 +325,6 @@ baudRate_e lookupBaudRateIndex(uint32_t baudRate)
         }
     }
     return BAUD_AUTO;
-}
-
-uint8_t (*passer_Callback)(uint8_t c) = NULL;
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-  if(huart->Instance == USART1)
-  {
-    HAL_UART_Receive_IT(&huart1, (uint8_t *)&rx_data[_DEF_UART1], 1);
-    qbufferWrite(&ring_buffer[_DEF_UART1], (uint8_t *)&rx_data[_DEF_UART1], 1);
-    passer_Callback(uartRead(_DEF_UART1));
-  }
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)

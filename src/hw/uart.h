@@ -37,7 +37,6 @@ typedef enum {
 } baudRate_e;
 
 extern const uint32_t baudRates[];
-extern uint8_t (*passer_Callback)(uint8_t c);
 
 bool     uartInit(void);
 bool     uartOpen(uint8_t ch, uint32_t baud);
@@ -46,6 +45,7 @@ uint32_t uartAvailable(uint8_t ch);
 bool uartTxBufEmpty(uint8_t ch);
 uint32_t uartTotalTxBytesFree(uint8_t ch);
 void waitForSerialPortToFinishTransmitting(uint8_t ch);
+bool bufferWrite(uint8_t ch, uint8_t *p_data, uint32_t length);
 uint8_t  uartRead(uint8_t ch);
 uint32_t uartWrite(uint8_t ch, uint8_t *p_data, uint32_t length);
 uint32_t uartWriteIT(uint8_t ch, uint8_t *p_data, uint32_t length);

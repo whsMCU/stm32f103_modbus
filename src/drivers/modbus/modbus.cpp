@@ -97,14 +97,13 @@ uint8_t Modbus::request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8
   {
   	return 0;
   }
-
   switch (funtion) {
     case MODBUS_FC_READ_HOLDING_REGISTERS:
       result = read_holding_registers(_slaveId, address, nb, _TxData);
       _length = 8;
       _availableForWrite_flag = false;
       gpioPinWrite(_de_pin, _DEF_HIGH);
-      uartWriteIT(_serial, _TxData, _length);
+      uartWriteIT(_serial, (uint8_t *)_TxData, _length);
       break;
 
     default:

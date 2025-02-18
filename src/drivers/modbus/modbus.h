@@ -143,8 +143,8 @@ class Modbus
     uint8_t  _serial;                                             ///< serial port num
     uint8_t  _de_pin;
 
-   uint8_t _TxData[256];
-   uint8_t _RxData[256];
+   uint8_t _TxData[64];
+   uint8_t _RxData[64];
    uint8_t _RxSize;
    uint8_t _RxStatus;
    static const uint8_t MaxBufferSize                = 64;   ///< size of response/transmit buffers

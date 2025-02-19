@@ -119,7 +119,7 @@ static const uint8_t table_crc_lo[] = {
 class Modbus
 {
   public:
-    Modbus();
+    Modbus(void);
 
     void begin(uint8_t serial, uint8_t de_pin);
 
@@ -129,7 +129,8 @@ class Modbus
     uint8_t request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8_t value);
     void sended(void);
     uint8_t get_de_pin(void);
-    uint8_t passer();
+    uint8_t passer(void);
+    void evaluateCommand(void);
 
     static const uint8_t Success                    = 0x00;
     static const uint8_t InvalidSlaveID             = 0xE0;
@@ -137,16 +138,28 @@ class Modbus
     static const uint8_t ResponseTimedOut           = 0xE2;
     static const uint8_t InvalidCRC                 = 0xE3;
 
+    static const uint8_t MODBUS_IDLE         			  = 0x00;
+    static const uint8_t MODBUS_ID          				= 0x01;
+    static const uint8_t MODBUS_FUNCTION          	= 0x02;
+    static const uint8_t MODBUS_SIZE          			= 0x03;
+    static const uint8_t MODBUS_DATA          			= 0x04;
+
+
     static const uint16_t ResponseTimeout           = 2000; ///< Modbus timeout [milliseconds]
 
   private:
     uint8_t  _serial;                                             ///< serial port num
     uint8_t  _de_pin;
 
+    uint8_t _c_state;
+
    uint8_t _TxData[64];
    uint8_t _RxData[64];
    uint8_t _RxSize;
+   uint8_t _RxIndex;
+   uint8_t _RxOffset;
    uint8_t _RxStatus;
+   uint16_t _RxChecksum;
    static const uint8_t MaxBufferSize                = 64;   ///< size of response/transmit buffers
    uint16_t _u16ResponseBuffer[MaxBufferSize];
    uint8_t _u8ResponseBufferLength;
@@ -160,7 +173,7 @@ class Modbus
     int _id;
     int _slaveId;
     int _type;
-    int _funtion;
+    int _function;
     int _address;
     int _nb;
     int _length;

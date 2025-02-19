@@ -11,8 +11,12 @@
 Modbus::Modbus(void)
 {
   _id = 1;
+  _defaultId = 1;
   _RxSize = 0;
   _availableForWrite_flag = true;
+  _c_state = MODBUS_IDLE;
+  _RxOffset = 0;
+  _RxChecksum = 0;
 }
 
 
@@ -100,6 +104,7 @@ uint8_t Modbus::request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8
   switch (funtion) {
     case MODBUS_FC_READ_HOLDING_REGISTERS:
       result = read_holding_registers(_slaveId, address, nb, _TxData);
+      _function = MODBUS_FC_READ_HOLDING_REGISTERS;
       _length = 8;
       _availableForWrite_flag = false;
       gpioPinWrite(_de_pin, _DEF_HIGH);
@@ -129,71 +134,52 @@ uint8_t Modbus::get_de_pin(void)
 
 uint8_t Modbus::passer()
 {
-	_RxStatus = Success;
+	uint8_t c;
 
-	uint16_t u16CRC;
-	static uint8_t RxLeft = 8;
-
-	if(uartAvailable(_serial))
+	while(uartAvailable(_serial)>0)
 	{
-		_RxData[_RxSize++] = uartRead(_serial);
-		RxLeft--;
-
-		if(_RxSize == 5)
-		{
-			if(_RxData[0] != _slaveId)
-			{
-				_RxStatus = InvalidSlaveID;
-				_RxSize = 0;
-				RxLeft = 8;
-				return 0;
+		c = uartRead(_serial);
+		if(_c_state == MODBUS_IDLE){
+			_c_state = (c==_slaveId) ? MODBUS_ID : MODBUS_IDLE;
+			_RxIndex = 0;
+			_RxData[_RxIndex++] = c;
+		} else if(_c_state == MODBUS_ID){
+			_c_state = (c==_function) ? MODBUS_FUNCTION : MODBUS_IDLE;
+			_RxData[_RxIndex++] = c;
+		} else if(_c_state == MODBUS_FUNCTION){
+			if(c > 255){
+				_c_state = MODBUS_IDLE;
 			}
-
-			if((_RxData[1] & 0x7F) != _funtion)
-			{
-				_RxStatus = InvalidFunction;
-				_RxSize = 0;
-				RxLeft = 8;
-				return 0;
-			}
-
-			if(bitRead(_RxData[1], 7))
-			{
-				_RxStatus = _RxData[2];
-				_RxSize = 0;
-				RxLeft = 8;
-				return 0;
-			}
-
-			switch(_RxData[1])
-			{
-				case MODBUS_FC_READ_HOLDING_REGISTERS :
-				{
-					RxLeft = _RxData[1];
-					break;
-				}
-			}
-	}
-
-		if(_RxStatus && _RxSize >=5)
-		{
+			_RxData[_RxIndex++] = c;
+			_RxSize = c;
+			_RxOffset = 0;
+			_RxChecksum = 0;
+			_c_state = MODBUS_SIZE;
+		} else if(_c_state == MODBUS_SIZE){
+			_RxData[_RxIndex++] = c;
+			_RxOffset++;
+			_c_state = MODBUS_DATA;
+		}else if(_c_state == MODBUS_DATA && _RxOffset < _RxSize+5){
+			_RxData[_RxIndex++] = c;
+			_RxOffset++;
+		}else if(_c_state == MODBUS_DATA && _RxOffset >= _RxSize+5){
 			// calculate CRC
-			u16CRC = 0xFFFF;
-			for(int i = 0; i < (_RxSize - 2); i++)
+			_RxChecksum = 0xFFFF;
+			for(int i = 0; i < (_RxIndex - 2); i++)
 			{
-				u16CRC = crc16_update(u16CRC, _RxData[i]);
+				_RxChecksum = crc16_update(_RxChecksum, _RxData[i]);
 			}
 
 			// verify CRC
-			if(!_RxStatus && (lowByte(u16CRC) != _RxData[_RxSize - 2] ||
-				highByte(u16CRC) != _RxData[_RxSize - 1]))
+			if(_RxChecksum == (_RxData[_RxIndex - 2] | _RxData[_RxIndex - 1]<<8))
 			{
-				_RxStatus = InvalidCRC;
-				_RxSize = 0;
-				RxLeft = 8;
-				return 0;
+				evaluateCommand();
 			}
+			_c_state = MODBUS_IDLE;
+			_RxIndex = 0;
 		}
+	}
+
 
 		if(!_RxStatus)
 		{
@@ -216,6 +202,23 @@ uint8_t Modbus::passer()
 			}
 		}
 
-	}
-	return _RxStatus;
+	return _c_state;
+}
+
+void Modbus::evaluateCommand(void) {
+	 switch(_function){
+		 case MODBUS_FC_READ_HOLDING_REGISTERS:
+       // load bytes into word; response bytes are ordered H, L, H, L, ...
+       for (int i = 0; i < (_RxData[2] >> 1); i++)
+       {
+         if (i < MaxBufferSize)
+         {
+           _u16ResponseBuffer[i] = word(_RxData[2 * i + 3], _RxData[2 * i + 4]);
+         }
+
+         _u8ResponseBufferLength = i;
+       }
+			 break;
+
+	 }
 }

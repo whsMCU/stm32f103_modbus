@@ -29,6 +29,8 @@ Modbus modbus;
 
 uint32_t pre_time = 0;
 
+uint16_t temp[3] = {0x1234, 0x5678, 0xabcd};
+
 int main(void)
 {
 
@@ -44,11 +46,12 @@ int main(void)
 
   while (1)
   {
-	  if(micros()-pre_time >= 500000)
+	  if(micros()-pre_time >= 1000000)
 	  {
 	    pre_time = micros();
 	    gpioPinToggle(LED);
-	    modbus.request(1, MODBUS_FC_READ_HOLDING_REGISTERS, 4, 5);
+	    //modbus.read_holding_registers(1, 4, 5);
+	    modbus.write_multiple_registers(1, 0, temp, 3);
 
 	  }
 	  //cliMain();
@@ -65,7 +68,7 @@ void hwInit(void)
   uartInit();
   uartOpen(_DEF_UART1, 115200);
 
-  modbus.begin(_DEF_UART1, RS_485_DE);
+  modbus.begin(_DEF_UART1, 1, RS_485_DE);
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)

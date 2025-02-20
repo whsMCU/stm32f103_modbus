@@ -121,12 +121,11 @@ class Modbus
   public:
     Modbus(void);
 
-    void begin(uint8_t serial, uint8_t de_pin);
-
-    //void passer(void (*)());
+    void begin(uint8_t serial, uint8_t id, uint8_t de_pin);
 
     uint8_t requestFrom(uint8_t id, uint8_t type, uint8_t address, uint8_t nb);
-    uint8_t request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8_t value);
+    uint8_t read_holding_registers(uint8_t slaveId, uint8_t address, uint8_t value);
+    uint8_t write_multiple_registers(uint8_t slaveId, uint8_t address, uint16_t *value, uint8_t qty);
     void sended(void);
     uint8_t get_de_pin(void);
     uint8_t passer(void);
@@ -165,20 +164,14 @@ class Modbus
    uint8_t _u8ResponseBufferLength;
 
     unsigned long _timeout;
-    int _defaultId;
 
     bool _availableForWrite_flag;
 
-    bool _transmissionBegun;
-    int _id;
-    int _slaveId;
-    int _type;
+    uint8_t _id;
+    uint8_t _slaveId;
     int _function;
     int _address;
-    int _nb;
     int _length;
-
-    //void (*_passer)();
 
 };
 

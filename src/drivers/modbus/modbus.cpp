@@ -11,7 +11,6 @@
 Modbus::Modbus(void)
 {
   _id = 1;
-  _defaultId = 1;
   _RxSize = 0;
   _availableForWrite_flag = true;
   _c_state = MODBUS_IDLE;
@@ -20,9 +19,10 @@ Modbus::Modbus(void)
 }
 
 
-void Modbus::begin(uint8_t serial, uint8_t de_pin)
+void Modbus::begin(uint8_t serial, uint8_t id, uint8_t de_pin)
 {
   _serial = serial;
+  _id			= id;
   _de_pin = de_pin;
 }
 
@@ -70,25 +70,8 @@ static int send_msg_pre(uint8_t *req, int req_length)
 }
 
 
-uint8_t read_holding_registers(uint8_t id, uint8_t address, uint8_t nb, uint8_t *req)
+uint8_t Modbus::read_holding_registers(uint8_t slaveId, uint8_t address, uint8_t nb)
 {
-	uint8_t result = 0;
-	req[0] = id;
-	req[1] = MODBUS_FC_READ_HOLDING_REGISTERS;
-	req[2] = highByte(address);
-	req[3] = lowByte(address);
-	req[4] = highByte(nb);
-	req[5] = lowByte(nb);
-	send_msg_pre(req, 6);
-
-	result = 1;
-	return result;
-}
-
-uint8_t Modbus::request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8_t nb)
-{
-  int result = -1;
-
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -101,25 +84,64 @@ uint8_t Modbus::request(uint8_t slaveId, uint8_t funtion, uint8_t address, uint8
   {
   	return 0;
   }
-  switch (funtion) {
-    case MODBUS_FC_READ_HOLDING_REGISTERS:
-      result = read_holding_registers(_slaveId, address, nb, _TxData);
-      _function = MODBUS_FC_READ_HOLDING_REGISTERS;
-      _length = 8;
-      _availableForWrite_flag = false;
-      gpioPinWrite(_de_pin, _DEF_HIGH);
-      uartWriteIT(_serial, (uint8_t *)_TxData, _length);
-      break;
 
-    default:
-      break;
+	_TxData[0] = slaveId;
+	_TxData[1] = MODBUS_FC_READ_HOLDING_REGISTERS;
+	_TxData[2] = highByte(address);
+	_TxData[3] = lowByte(address);
+	_TxData[4] = highByte(nb);
+	_TxData[5] = lowByte(nb);
+	send_msg_pre(_TxData, 6);
+
+	_function = MODBUS_FC_READ_HOLDING_REGISTERS;
+	_length = 8;
+	_availableForWrite_flag = false;
+	gpioPinWrite(_de_pin, _DEF_HIGH);
+	uartWriteIT(_serial, (uint8_t *)_TxData, _length);
+
+  return true;
+}
+
+uint8_t Modbus::write_multiple_registers(uint8_t slaveId, uint8_t address, uint16_t *value, uint8_t qty)
+{
+	uint8_t idx = 7;
+	uint8_t size = 0;
+  if (slaveId >= 0 && slaveId <= 247)
+  {
+  	_slaveId = slaveId;
+  }else
+  {
+  	return 0;
   }
 
-  if (result == -1) {
-    return 0;
+  if(_availableForWrite_flag == false)
+  {
+  	return 0;
   }
 
-  return nb;
+	_TxData[0] = slaveId;
+	_TxData[1] = MODBUS_FC_WRITE_MULTIPLE_REGISTERS;
+	_TxData[2] = highByte(address);
+	_TxData[3] = lowByte(address);
+	_TxData[4] = highByte(qty);
+	_TxData[5] = lowByte(qty);
+	_TxData[6] = lowByte(qty)<<1;
+
+  for (int i = 0; i < lowByte(qty); i++)
+  {
+  	_TxData[idx++] = highByte(value[i]);
+  	_TxData[idx++] = lowByte(value[i]);
+  }
+
+  size = send_msg_pre(_TxData, idx);
+
+	_function = MODBUS_FC_WRITE_MULTIPLE_REGISTERS;
+	_length = size;
+	_availableForWrite_flag = false;
+	gpioPinWrite(_de_pin, _DEF_HIGH);
+	uartWriteIT(_serial, (uint8_t *)_TxData, _length);
+
+  return true;
 }
 
 void Modbus::sended(void)

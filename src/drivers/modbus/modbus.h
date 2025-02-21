@@ -126,6 +126,9 @@ class Modbus
     uint8_t requestFrom(uint8_t id, uint8_t type, uint8_t address, uint8_t nb);
     uint8_t read_holding_registers(uint8_t slaveId, uint8_t address, uint8_t value);
     uint8_t write_multiple_registers(uint8_t slaveId, uint8_t address, uint16_t *value, uint8_t qty);
+    uint8_t read_coils(uint8_t slaveId, uint8_t address, uint8_t qty);
+    uint8_t write_single_coil(uint8_t slaveId, uint8_t address, uint16_t status);
+    uint8_t write_multiple_coils(uint8_t slaveId, uint8_t address, uint16_t *value, uint8_t qty);
     void sended(void);
     uint8_t get_de_pin(void);
     uint8_t passer(void);

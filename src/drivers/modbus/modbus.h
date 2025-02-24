@@ -123,12 +123,18 @@ class Modbus
 
     void begin(uint8_t serial, uint8_t id, uint8_t de_pin);
 
-    uint8_t requestFrom(uint8_t id, uint8_t type, uint8_t address, uint8_t nb);
-    uint8_t read_holding_registers(uint8_t slaveId, uint8_t address, uint8_t value);
-    uint8_t write_multiple_registers(uint8_t slaveId, uint8_t address, uint16_t *value, uint8_t qty);
-    uint8_t read_coils(uint8_t slaveId, uint8_t address, uint8_t qty);
-    uint8_t write_single_coil(uint8_t slaveId, uint8_t address, uint16_t status);
-    uint8_t write_multiple_coils(uint8_t slaveId, uint8_t address, uint16_t *value, uint8_t qty);
+    uint8_t read_coils(uint8_t slaveId, uint16_t address, uint16_t qty);
+    uint8_t read_discrete_inputs(uint8_t slaveId, uint16_t address, uint16_t qty);
+    uint8_t read_holding_registers(uint8_t slaveId, uint16_t address, uint16_t qty);
+    uint8_t read_input_registers(uint8_t slaveId, uint16_t address, uint16_t qty);
+    uint8_t write_single_coil(uint8_t slaveId, uint16_t address, uint16_t status);
+    uint8_t write_single_register(uint8_t slaveId, uint16_t address, uint16_t value);
+
+    uint8_t write_multiple_coils(uint8_t slaveId, uint16_t address, uint16_t *value, uint16_t qty);
+    uint8_t write_multiple_registers(uint8_t slaveId, uint16_t address, uint16_t *value, uint16_t qty);
+    uint8_t write_mask_register(uint8_t slaveId, uint16_t address, uint16_t AndMask, uint16_t OrMask);
+    uint8_t write_read_registers(uint8_t slaveId, uint16_t ReadAddress, uint16_t ReadQty, uint16_t WriteAddress, uint16_t *value, uint16_t WriteQty);
+
     void sended(void);
     uint8_t get_de_pin(void);
     uint8_t passer(void);

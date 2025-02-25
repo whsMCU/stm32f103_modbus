@@ -71,6 +71,9 @@ uint8_t Modbus::read_coils(uint8_t slaveId, uint16_t address, uint16_t qty)
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -105,6 +108,9 @@ uint8_t Modbus::read_discrete_inputs(uint8_t slaveId, uint16_t address, uint16_t
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -139,6 +145,9 @@ uint8_t Modbus::read_holding_registers(uint8_t slaveId, uint16_t address, uint16
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -173,6 +182,9 @@ uint8_t Modbus::read_input_registers(uint8_t slaveId, uint16_t address, uint16_t
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -207,6 +219,9 @@ uint8_t Modbus::write_single_coil(uint8_t slaveId, uint16_t address, uint16_t st
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
 	uint16_t qty = (status ? 0xFF00 : 0x0000);
 
   if (slaveId >= 0 && slaveId <= 247)
@@ -244,6 +259,9 @@ uint8_t Modbus::write_single_register(uint8_t slaveId, uint16_t address, uint16_
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -279,6 +297,10 @@ uint8_t Modbus::write_multiple_coils(uint8_t slaveId, uint16_t address, uint16_t
 	uint8_t idx = 0;
 	uint8_t size = 0;
 	uint8_t u8Qty;
+
+	_response_flag = false;
+
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -329,6 +351,9 @@ uint8_t Modbus::write_multiple_registers(uint8_t slaveId, uint16_t address, uint
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -371,6 +396,9 @@ uint8_t Modbus::write_mask_register(uint8_t slaveId, uint16_t address, uint16_t 
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -408,6 +436,9 @@ uint8_t Modbus::write_read_registers(uint8_t slaveId, uint16_t ReadAddress, uint
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
+
+	_response_flag = false;
+
   if (slaveId >= 0 && slaveId <= 247)
   {
   	_slaveId = slaveId;
@@ -534,6 +565,15 @@ uint8_t Modbus::passer()
 
 void Modbus::evaluateCommand(void) {
 	 switch(_function){
+
+		 case MODBUS_FC_READ_COILS:
+			 _response_flag = true;
+			 break;
+
+		 case MODBUS_FC_READ_DISCRETE_INPUTS:
+			 _response_flag = true;
+			 break;
+
 		 case MODBUS_FC_READ_HOLDING_REGISTERS:
        // load bytes into word; response bytes are ordered H, L, H, L, ...
        for (int i = 0; i < (_RxData[2] >> 1); i++)
@@ -545,6 +585,35 @@ void Modbus::evaluateCommand(void) {
 
          _u8ResponseBufferLength = i;
        }
+       _response_flag = true;
+			 break;
+
+		 case MODBUS_FC_READ_INPUT_REGISTERS:
+			 _response_flag = true;
+			 break;
+
+		 case MODBUS_FC_WRITE_SINGLE_COIL:
+			 _response_flag = true;
+			 break;
+
+		 case MODBUS_FC_WRITE_SINGLE_REGISTER:
+			 _response_flag = true;
+			 break;
+
+		 case MODBUS_FC_WRITE_MULTIPLE_COILS:
+			 _response_flag = true;
+			 break;
+
+		 case MODBUS_FC_WRITE_MULTIPLE_REGISTERS:
+			 _response_flag = true;
+			 break;
+
+		 case MODBUS_FC_MASK_WRITE_REGISTER:
+			 _response_flag = true;
+			 break;
+
+		 case MODBUS_FC_WRITE_AND_READ_REGISTERS:
+			 _response_flag = true;
 			 break;
 
 	 }

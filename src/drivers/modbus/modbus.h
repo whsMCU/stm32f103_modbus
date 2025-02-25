@@ -173,15 +173,16 @@ class Modbus
    uint16_t _u16ResponseBuffer[MaxBufferSize];
    uint8_t _u8ResponseBufferLength;
 
-    unsigned long _timeout;
+   unsigned long _timeout;
 
-    bool _availableForWrite_flag;
+   bool _availableForWrite_flag;
+   bool _response_flag;
 
-    uint8_t _id;
-    uint8_t _slaveId;
-    int _function;
-    int _address;
-    int _length;
+   uint8_t _id;
+   uint8_t _slaveId;
+   int _function;
+   int _address;
+   int _length;
 
 };
 

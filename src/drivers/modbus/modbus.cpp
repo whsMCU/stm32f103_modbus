@@ -207,7 +207,7 @@ uint8_t Modbus::write_single_coil(uint8_t slaveId, uint16_t address, uint16_t st
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
-	uint8_t qty = (status ? 0xFF00 : 0x0000);
+	uint16_t qty = (status ? 0xFF00 : 0x0000);
 
   if (slaveId >= 0 && slaveId <= 247)
   {

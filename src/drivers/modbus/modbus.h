@@ -127,6 +127,7 @@ class Modbus
     uint8_t read_discrete_inputs(uint8_t slaveId, uint16_t address, uint16_t qty);
     uint8_t read_holding_registers(uint8_t slaveId, uint16_t address, uint16_t qty);
     uint8_t read_input_registers(uint8_t slaveId, uint16_t address, uint16_t qty);
+
     uint8_t write_single_coil(uint8_t slaveId, uint16_t address, uint16_t status);
     uint8_t write_single_register(uint8_t slaveId, uint16_t address, uint16_t value);
 

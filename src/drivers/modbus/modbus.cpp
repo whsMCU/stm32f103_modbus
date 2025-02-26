@@ -296,7 +296,9 @@ uint8_t Modbus::write_multiple_coils(uint8_t slaveId, uint16_t address, uint16_t
 {
 	uint8_t idx = 0;
 	uint8_t size = 0;
-	uint8_t u8Qty;
+	uint8_t byte_count;
+  uint16_t bit_check = 0;
+  uint16_t pos = 0;
 
 	_response_flag = false;
 
@@ -320,20 +322,25 @@ uint8_t Modbus::write_multiple_coils(uint8_t slaveId, uint16_t address, uint16_t
 	_TxData[idx++] = lowByte(address);
 	_TxData[idx++] = highByte(qty);
 	_TxData[idx++] = lowByte(qty);
-  u8Qty = (qty % 8) ? ((qty >> 3) + 1) : (qty >> 3);
-  _TxData[6] = u8Qty;
-  for (int i = 0; i < u8Qty; i++)
+	byte_count = (qty / 8) + ((qty % 8) ? 1 : 0);
+  _TxData[idx++] = byte_count;
+  for (int i = 0; i < byte_count; i++)
   {
-    switch(i % 2)
-    {
-      case 0: // i is even
-      	_TxData[idx++] = lowByte(value[i >> 1]);
-        break;
+  	uint16_t bit;
 
-      case 1: // i is odd
-      	_TxData[idx++] = highByte(value[i >> 1]);
-        break;
-    }
+  	bit = 0x01;
+  	_TxData[idx] = 0;
+
+  	while ((bit & 0xFF) && (bit_check++ < qty)){
+
+      if (value[pos++])
+      	_TxData[idx] |= bit;
+      else
+      	_TxData[idx] &=~ bit;
+
+      bit = bit << 1;
+		}
+  	idx++;
   }
 
   size = send_msg_pre(_TxData, idx);

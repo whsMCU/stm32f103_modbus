@@ -30,7 +30,7 @@ Modbus modbus;
 uint32_t pre_time = 0;
 
 uint16_t write_temp[3] = {0x1234, 0x5678, 0xabcd};
-uint16_t read_temp[10];
+uint16_t write_coils_temp[15] = {1, 0, 1, 0 , 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1};
 
 int main(void)
 {
@@ -52,8 +52,10 @@ int main(void)
 	    pre_time = micros();
 	    gpioPinToggle(LED);
 	    //modbus.read_holding_registers(1, 4, 5);
+	    modbus.write_multiple_registers(1, 3, write_temp, 3);
+	    //modbus.write_single_coil(1, 4, 1);
+	    //modbus.write_multiple_coils(1, 0, write_coils_temp, 15);
 	    //modbus.write_multiple_registers(1, 0, write_temp, 3);
-	    modbus.write_single_coil(1, 10, 1);
 
 	  }
 	  //cliMain();

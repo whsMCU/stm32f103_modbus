@@ -51,11 +51,10 @@ int main(void)
 	  {
 	    pre_time = micros();
 	    gpioPinToggle(LED);
-	    //modbus.read_holding_registers(1, 4, 5);
-	    modbus.write_multiple_registers(1, 3, write_temp, 3);
+	    modbus.read_holding_registers(1, 1, 10);
+	    //modbus.write_multiple_registers(1, 2, write_temp, 3);
 	    //modbus.write_single_coil(1, 4, 1);
 	    //modbus.write_multiple_coils(1, 0, write_coils_temp, 15);
-	    //modbus.write_multiple_registers(1, 0, write_temp, 3);
 
 	  }
 	  //cliMain();
